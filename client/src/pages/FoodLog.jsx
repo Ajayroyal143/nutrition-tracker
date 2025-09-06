@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import "./FoodLog.css"; // Import the CSS file
 
-const FoodLog = ({ loggedFoods, onAddFood, onDeleteFood, token }) => {
+const FoodLog = ({ loggedFoods, onAddFood, onEditFood, onDeleteFood, token }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [selectedFood, setSelectedFood] = useState(null);
@@ -97,8 +97,6 @@ const FoodLog = ({ loggedFoods, onAddFood, onDeleteFood, token }) => {
     try {
       await onDeleteFood(id);
       setToast({ type: "success", message: "Food deleted!" });
-      // Optimistically update local list
-      setFoods((prev) => prev.filter((f) => f._id !== id));
     } catch {
       setToast({ type: "error", message: "Failed to delete food." });
     }
@@ -118,25 +116,7 @@ const FoodLog = ({ loggedFoods, onAddFood, onDeleteFood, token }) => {
 
   const saveEdit = async (id) => {
     try {
-      const res = await fetch(`http://localhost:5000/foods/${id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ servings: Number(editServings), meal: editMeal }),
-      });
-
-      const data = await res.json();
-      if (!res.ok || !data.success) throw new Error(data.message || "Failed to update food.");
-
-      // Update local list so UI reflects changes immediately
-      setFoods((prev) =>
-        prev.map((f) =>
-          f._id === id ? { ...f, servings: Number(editServings), meal: editMeal } : f
-        )
-      );
-
+      await onEditFood(id, { servings: Number(editServings), meal: editMeal });
       setToast({ type: "success", message: "Food updated!" });
       setEditingId(null);
     } catch (e) {

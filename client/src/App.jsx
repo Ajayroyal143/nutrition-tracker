@@ -139,14 +139,23 @@ function App() {
 
   const handleDeleteFood = async (id) => {
     try {
-      const res = await axios.delete(`http://localhost:5000/foods/${id}`, {
+      await axios.delete(`http://localhost:5000/foods/${id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      await fetchFoods(); // Refresh global state
+    } catch (err) {
+      alert("Failed to delete food");
+    }
+  };
+
+  const handleEditFood = async (id, updates) => {
+    try {
+      await axios.put(`http://localhost:5000/foods/${id}`, updates, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (res.data.success) {
-        setLoggedFoods(loggedFoods.filter((f) => f._id !== id));
-      }
+      await fetchFoods(); // Refresh global state
     } catch (err) {
-      toast.error(err.response?.data?.message || "Error deleting food");
+      alert("Failed to update food");
     }
   };
 
@@ -227,6 +236,7 @@ function App() {
           <FoodLog
             loggedFoods={loggedFoods}
             onAddFood={handleAddFood}
+            onEditFood={handleEditFood}
             onDeleteFood={handleDeleteFood}
             token={token}
           />
